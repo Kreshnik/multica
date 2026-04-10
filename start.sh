@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-git pull
+git pull origin "$(git rev-parse --abbrev-ref HEAD)"
 /usr/local/bin/multica update
 docker compose -f docker-compose.selfhost.yml up -d --build
 
