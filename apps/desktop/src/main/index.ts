@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from "electron";
+import { app, shell, BrowserWindow, ipcMain } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 
@@ -36,6 +36,11 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
+
+// Open a folder in Finder/Explorer from the renderer.
+ipcMain.handle("open-folder", (_event, folderPath: string) => {
+  shell.openPath(folderPath);
+});
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId("ai.multica.desktop");

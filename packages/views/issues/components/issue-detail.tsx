@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  FolderOpen,
   Link2,
   MoreHorizontal,
   PanelRight,
@@ -186,13 +187,15 @@ interface IssueDetailProps {
   layoutId?: string;
   /** When set, the issue detail will auto-scroll to this comment and briefly highlight it. */
   highlightCommentId?: string;
+  /** When provided, a folder button appears in the sidebar to open the agent's work directory. Desktop-only. */
+  onOpenFolder?: (path: string) => void;
 }
 
 // ---------------------------------------------------------------------------
 // IssueDetail
 // ---------------------------------------------------------------------------
 
-export function IssueDetail({ issueId, onDelete, defaultSidebarOpen = true, layoutId = "multica_issue_detail_layout", highlightCommentId }: IssueDetailProps) {
+export function IssueDetail({ issueId, onDelete, defaultSidebarOpen = true, layoutId = "multica_issue_detail_layout", highlightCommentId, onOpenFolder }: IssueDetailProps) {
   const id = issueId;
   const router = useNavigation();
   const user = useAuthStore((s) => s.user);
@@ -263,6 +266,19 @@ export function IssueDetail({ issueId, onDelete, defaultSidebarOpen = true, layo
 
   // Token usage
   const { data: usage } = useQuery(issueUsageOptions(id));
+
+  // Latest task work_dir — only fetched when the desktop folder button is available
+  const [latestWorkDir, setLatestWorkDir] = useState<string | null>(null);
+  useEffect(() => {
+    if (!onOpenFolder) return;
+    api.listTasksByIssue(id).then((tasks) => {
+      const latest = tasks
+        .filter((t) => t.status === "completed" && !!t.work_dir)
+        .sort((a, b) => (b.completed_at ?? "").localeCompare(a.completed_at ?? ""))
+        .at(0);
+      setLatestWorkDir(latest?.work_dir ?? null);
+    }).catch(() => {});
+  }, [id, onOpenFolder]);
 
   // Pinned state
   const { data: pinnedItems = [] } = useQuery(pinListOptions(wsId));
@@ -1284,6 +1300,17 @@ export function IssueDetail({ issueId, onDelete, defaultSidebarOpen = true, layo
               <PropRow label="Updated">
                 <span className="text-muted-foreground">{shortDate(issue.updated_at)}</span>
               </PropRow>
+              {onOpenFolder && latestWorkDir && (
+                <PropRow label="Agent dir">
+                  <button
+                    onClick={() => onOpenFolder(latestWorkDir)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <FolderOpen className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate font-mono text-[11px]">{latestWorkDir.split("/").slice(-3).join("/")}</span>
+                  </button>
+                </PropRow>
+              )}
             </div>}
           </div>
 

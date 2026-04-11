@@ -94,6 +94,7 @@ type AgentTaskResponse struct {
 	ChatSessionID    string         `json:"chat_session_id,omitempty"`     // non-empty for chat tasks
 	ChatMessage      string         `json:"chat_message,omitempty"`        // user message for chat tasks
 	WorkingDir       string         `json:"working_dir,omitempty"`         // working_directory from issue or project
+	WorkDir          string         `json:"work_dir,omitempty"`            // actual execution directory on the daemon machine
 }
 
 // TaskAgentData holds agent info included in claim responses so the daemon
@@ -124,6 +125,7 @@ func taskToResponse(t db.AgentTaskQueue) AgentTaskResponse {
 		Error:            textToPtr(t.Error),
 		CreatedAt:        timestampToString(t.CreatedAt),
 		TriggerCommentID: uuidToPtr(t.TriggerCommentID),
+		WorkDir:          t.WorkDir.String,
 	}
 }
 

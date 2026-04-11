@@ -13,5 +13,10 @@ export function IssueDetailPage() {
   useDocumentTitle(issue ? `${issue.identifier}: ${issue.title}` : "Issue");
 
   if (!id) return null;
-  return <IssueDetail issueId={id} />;
+  return (
+    <IssueDetail
+      issueId={id}
+      onOpenFolder={(path) => window.electron.ipcRenderer.invoke("open-folder", path)}
+    />
+  );
 }
