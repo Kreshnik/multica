@@ -1234,12 +1234,14 @@ func (d *Daemon) globalSkillsWatchLoop(ctx context.Context) {
 		if fp == lastFingerprint {
 			return
 		}
-		lastFingerprint = fp
 
 		runtimeIDs := d.oneRuntimeIDPerWorkspace()
 		if len(runtimeIDs) == 0 {
+			// Runtimes not yet registered — don't advance the fingerprint so
+			// the next tick will retry once runtimes are available.
 			return
 		}
+		lastFingerprint = fp
 
 		ctx2, cancel := context.WithTimeout(ctx, 15*time.Second)
 		err := d.client.SyncGlobalSkills(ctx2, runtimeIDs, skills)

@@ -11,27 +11,33 @@ interface DirInputProps {
 
 /**
  * A text input for filesystem paths with a browse button.
- * Uses showDirectoryPicker() — opens a native OS directory picker
- * without enumerating any files inside the selected folder.
- * In Electron, the handle may expose a full absolute path via _path.
- * In a browser, falls back to the directory name; the user can type the
- * full path manually.
+ * In Electron, uses dialog.showOpenDialog via IPC — returns the full absolute path.
+ * In a browser, falls back to showDirectoryPicker() which only provides the folder name.
  */
 export function DirInput({ value, inputKey, className, onCommit }: DirInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleBrowse = async () => {
     try {
-      // showDirectoryPicker opens a native picker with no file enumeration.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const picker = (window as any).showDirectoryPicker;
-      if (!picker) return;
-      const handle = await picker({ mode: "read" });
-      // Electron exposes the real absolute path via handle._path; browsers
-      // only expose the folder name via handle.name.
-      const dir: string = handle._path ?? handle.name;
+      const electron = (window as any).electron;
+      let dir: string | null = null;
+
+      if (electron?.ipcRenderer) {
+        // Electron: use native dialog — returns full absolute path.
+        dir = await electron.ipcRenderer.invoke("pick-directory");
+      } else {
+        // Web: showDirectoryPicker only provides the folder name, not the full path.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const picker = (window as any).showDirectoryPicker;
+        if (!picker) return;
+        const handle = await picker({ mode: "read" });
+        dir = handle.name ?? null;
+      }
+
+      if (!dir) return;
       if (inputRef.current) inputRef.current.value = dir;
-      onCommit(dir || null);
+      onCommit(dir);
     } catch {
       // User cancelled the picker — do nothing.
     }

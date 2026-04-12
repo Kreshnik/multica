@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from "electron";
+import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 
@@ -40,6 +40,12 @@ function createWindow(): void {
 // Open a folder in Finder/Explorer from the renderer.
 ipcMain.handle("open-folder", (_event, folderPath: string) => {
   shell.openPath(folderPath);
+});
+
+// Show a native directory picker and return the selected path (or null).
+ipcMain.handle("pick-directory", async () => {
+  const result = await dialog.showOpenDialog({ properties: ["openDirectory"] });
+  return result.canceled ? null : result.filePaths[0] ?? null;
 });
 
 app.whenReady().then(() => {
