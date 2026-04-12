@@ -30,6 +30,11 @@ catalog:
   # Icons
   lucide-react: "^1.0.1"
 
+  # Markdown / rehype / remark
+  "rehype-raw": "^7.0.0"
+  "rehype-sanitize": "^6.0.0"
+  "remark-gfm": "^4.0.1"
+
   # Testing
   vitest: "^4.1.0"
   jsdom: "^29.0.1"

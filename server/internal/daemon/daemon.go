@@ -803,16 +803,6 @@ func (d *Daemon) handleTask(ctx context.Context, task Task) {
 		taskLog.Info("picked task", "issue", task.IssueID, "agent", agentName, "provider", provider)
 	}
 
-	if err := d.client.StartTask(ctx, task.ID); err != nil {
-		taskLog.Error("start task failed", "error", err)
-		if failErr := d.client.FailTask(ctx, task.ID, fmt.Sprintf("start task failed: %s", err.Error())); failErr != nil {
-			taskLog.Error("fail task after start error", "error", failErr)
-		}
-		return
-	}
-
-	_ = d.client.ReportProgress(ctx, task.ID, fmt.Sprintf("Launching %s", provider), 1, 2)
-
 	// Create a cancellable context so we can interrupt the running agent
 	// when the server-side task status changes to 'cancelled'.
 	runCtx, runCancel := context.WithCancel(ctx)
@@ -936,6 +926,12 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, taskLo
 		if err != nil {
 			return TaskResult{}, fmt.Errorf("prepare execution environment: %w", err)
 		}
+	}
+
+	// Mark the task as running and record the work_dir immediately, so the
+	// UI can open the folder before the task completes.
+	if err := d.client.StartTask(ctx, task.ID, env.WorkDir); err != nil {
+		return TaskResult{}, fmt.Errorf("start task: %w", err)
 	}
 
 	// Inject runtime-specific config (meta skill) so the agent discovers .agent_context/.

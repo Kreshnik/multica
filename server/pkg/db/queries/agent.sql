@@ -106,6 +106,9 @@ SET status = 'running', started_at = now()
 WHERE id = $1 AND status = 'dispatched'
 RETURNING *;
 
+-- name: SetTaskWorkDir :exec
+UPDATE agent_task_queue SET work_dir = $2 WHERE id = $1;
+
 -- name: CompleteAgentTask :one
 UPDATE agent_task_queue
 SET status = 'completed', completed_at = now(), result = $2, session_id = $3, work_dir = $4

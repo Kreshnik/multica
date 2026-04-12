@@ -857,6 +857,20 @@ func (q *Queries) RestoreAgent(ctx context.Context, id pgtype.UUID) (Agent, erro
 	return i, err
 }
 
+const setTaskWorkDir = `-- name: SetTaskWorkDir :exec
+UPDATE agent_task_queue SET work_dir = $2 WHERE id = $1
+`
+
+type SetTaskWorkDirParams struct {
+	ID      pgtype.UUID `json:"id"`
+	WorkDir pgtype.Text `json:"work_dir"`
+}
+
+func (q *Queries) SetTaskWorkDir(ctx context.Context, arg SetTaskWorkDirParams) error {
+	_, err := q.db.Exec(ctx, setTaskWorkDir, arg.ID, arg.WorkDir)
+	return err
+}
+
 const startAgentTask = `-- name: StartAgentTask :one
 UPDATE agent_task_queue
 SET status = 'running', started_at = now()

@@ -273,8 +273,8 @@ export function IssueDetail({ issueId, onDelete, defaultSidebarOpen = true, layo
     if (!onOpenFolder) return;
     api.listTasksByIssue(id).then((tasks) => {
       const latest = tasks
-        .filter((t) => t.status === "completed" && !!t.work_dir)
-        .sort((a, b) => (b.completed_at ?? "").localeCompare(a.completed_at ?? ""))
+        .filter((t) => !!t.work_dir)
+        .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
         .at(0);
       setLatestWorkDir(latest?.work_dir ?? null);
     }).catch(() => {});

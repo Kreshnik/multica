@@ -609,11 +609,27 @@ func (h *Handler) StartTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var req struct {
+		WorkDir string `json:"work_dir"`
+	}
+	// Ignore decode errors — work_dir is optional for backwards compatibility.
+	json.NewDecoder(r.Body).Decode(&req)
+
 	task, err := h.TaskService.StartTask(r.Context(), parseUUID(taskID))
 	if err != nil {
 		slog.Warn("start task failed", "task_id", taskID, "error", err)
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+
+	// Persist work_dir immediately so the UI can open the folder before completion.
+	if req.WorkDir != "" {
+		if err := h.Queries.SetTaskWorkDir(r.Context(), db.SetTaskWorkDirParams{
+			ID:      parseUUID(taskID),
+			WorkDir: pgtype.Text{String: req.WorkDir, Valid: true},
+		}); err != nil {
+			slog.Warn("set task work_dir failed", "task_id", taskID, "error", err)
+		}
 	}
 
 	slog.Info("task started", "task_id", taskID, "agent_id", uuidToString(task.AgentID))
