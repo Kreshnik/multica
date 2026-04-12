@@ -665,6 +665,7 @@ func fetchFromSkillsSh(httpClient *http.Client, rawURL string) (*importedSkill, 
 
 	// Skills can be at different paths depending on the repo structure:
 	//   skills/{name}/SKILL.md          (most common)
+	//   .claude/skills/{name}/SKILL.md  (Claude Code native discovery)
 	//   plugin/skills/{name}/SKILL.md   (e.g. microsoft repos)
 	//   {name}/SKILL.md                 (skill at repo root level)
 	defaultBranch := fetchGitHubDefaultBranch(httpClient, owner, repo)
@@ -673,6 +674,7 @@ func fetchFromSkillsSh(httpClient *http.Client, rawURL string) (*importedSkill, 
 
 	candidatePaths := []string{
 		"skills/" + skillName,
+		".claude/skills/" + skillName,
 		"plugin/skills/" + skillName,
 		skillName,
 	}
